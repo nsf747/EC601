@@ -30,16 +30,15 @@ for tweet in public_tweets:
 df = pd.DataFrame(data, columns=columns)
 df.to_csv('tweets.csv')
 
+
 ###Getting some tweets of a user
 user = 'SpaceX'
-max_limit = 10
-tweets = api.user_timeline(screen_name = user, count = max_limit, tweet_mode = 'extended')
-for tweet in tweets:
-    print(tweet.full_text)
+limit = 30
 
-##Search tweets by Hashtags
-hashtag = '#Boston_University'
-max_hash = 100
-tweets = api.search_tweets(q = hashtag, count = max_hash, tweet_mode = 'extended')
+tweets = api.user_timeline(screen_name = user, count = limit, tweet_mode = 'extended')
 for tweet in tweets:
     print(tweet.full_text)
+    
+
+
+
