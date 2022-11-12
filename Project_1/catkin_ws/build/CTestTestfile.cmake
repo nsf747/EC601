@@ -6,4 +6,6 @@
 # testing this directory and lists subdirectories to be tested as well.
 subdirs("gtest")
 subdirs("realsense-ros/realsense2_description")
+subdirs("detection_msgs")
 subdirs("realsense-ros/realsense2_camera")
+subdirs("yolov5_ros")

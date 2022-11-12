@@ -132,7 +132,9 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for each subdirectory.
   include("/home/nigel/Desktop/project/EC601/Project_1/catkin_ws/build/gtest/cmake_install.cmake")
   include("/home/nigel/Desktop/project/EC601/Project_1/catkin_ws/build/realsense-ros/realsense2_description/cmake_install.cmake")
+  include("/home/nigel/Desktop/project/EC601/Project_1/catkin_ws/build/detection_msgs/cmake_install.cmake")
   include("/home/nigel/Desktop/project/EC601/Project_1/catkin_ws/build/realsense-ros/realsense2_camera/cmake_install.cmake")
+  include("/home/nigel/Desktop/project/EC601/Project_1/catkin_ws/build/yolov5_ros/cmake_install.cmake")
 
 endif()
 
