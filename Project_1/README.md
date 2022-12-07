@@ -1,4 +1,4 @@
-# ROS toolbox for 3D Object and Pose Detection 
+# Toolbox for 3D Object and Pose Detection 
 
 This is work in progress
 
