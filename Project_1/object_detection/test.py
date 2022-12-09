@@ -49,7 +49,7 @@ from utils.dataloaders import IMG_FORMATS, VID_FORMATS, LoadImages, LoadScreensh
 from utils.augmentations import Albumentations, augment_hsv, copy_paste, letterbox, mixup, random_perspective
 from utils.general import (LOGGER, Profile, check_file, check_img_size, check_imshow, check_requirements, colorstr, cv2,
                            increment_path, non_max_suppression, print_args, scale_boxes, strip_optimizer, xyxy2xywh,scale_coords)
-from utils.plots import Annotator, colors, save_one_box, plot_one_box
+from utils.plots import Annotator, colors, save_one_box, plot_one_box, get_orientation
 from utils.torch_utils import select_device, smart_inference_mode, load_classifier
 import torch
 import torch.backends.cudnn as cudnn
@@ -183,6 +183,7 @@ def run():
         if classify:
             pred =0 # apply_classifier(pred, modelc, img, img0)
 
+        imc=img0.copy()
         # Process detections
         for i, det in enumerate(pred):  # detections per image
             s = f'{i}: '
@@ -199,6 +200,7 @@ def run():
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls)  # integer class
                     label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
+                    angle=get_orientation(xyxy, imc, file=save_dir / 'crops' / names[c] / "f.jpg", BGR=True)
                     plot_one_box(xyxy, img0, label=label, color=colors(c, True), line_thickness=line_thickness)
                     offset_x = int((xyxy[2] - xyxy[0])/50)
                     offset_y = int((xyxy[3] - xyxy[1])/50)
@@ -209,6 +211,10 @@ def run():
                         for j in range(3):
                             x = int(xyxy[0]) + offset_x + interval_x*i1
                             y = int(xyxy[1]) + offset_y + interval_y*j
+                            if x>640:
+                                x=639
+                            if y>480:
+                                y=479
                             dist = depth_frame.get_distance(x, y)*1000
                             Xtemp = dist*(x - intr.ppx)/intr.fx
                             Ytemp = dist*(y - intr.ppy)/intr.fy
@@ -218,7 +224,7 @@ def run():
                             points[j+i1*3][2] = Ztemp
 
                     param = find_plane(points)
-
+                    centre_coordinates= points[5]
                     alpha = math.atan(param[2]/param[0])*180/math.pi
                     if(alpha < 0):
                         alpha = alpha + 90
@@ -231,17 +237,16 @@ def run():
                     else:
                         gamma = gamma - 90
                     
-                    text1 = "alpha : " + str(round(alpha))
-                    text2 = "gamma : " + str(round(gamma))
+                    text1 = "x : " + str(round(centre_coordinates[0]))
+                    text2 = "y : " + str(round(centre_coordinates[1]))
                     
+                    #print(points)
                     
-
                     Dz = depth_frame.get_distance(int((xyxy[0] + xyxy[2])/2),int((xyxy[1] + xyxy[3])/2))*1000 # get Dz
-                    pc.map_to(color_frame)
-                    points = pc.calculate(depth_frame)
-                    print("alpha : " + f"{alpha:.2f}" + ", gamma : " + f"{gamma:.2f}" + ", Distance from camera " + f"{Dz:.2f}" + "mm")
-                    text3 = "Dist : " + str(round(Dz))
                     
+                    s+= "alpha: " + f"{alpha:.2f}" + ", gamma: " + f"{gamma:.2f}" + "x:y:z=" + f"{centre_coordinates[0]:.2f}" + ":" + f"{centre_coordinates[1]:.2f}" + ":" + f"{centre_coordinates[2]:.2f}" 
+                    text3 = "z : " + str(round(Dz))
+                    s+="\n"
                     cv2.putText(img0, text1, (int((xyxy[0] + xyxy[2])/2) - 40, int((xyxy[1] + xyxy[3])/2)), cv2.FONT_HERSHEY_PLAIN, 2, [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)
                     cv2.putText(img0, text2, (int((xyxy[0] + xyxy[2])/2) - 40, int((xyxy[1] + xyxy[3])/2) + 40), cv2.FONT_HERSHEY_PLAIN, 2, [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)
                     cv2.putText(img0, text3, (int((xyxy[0] + xyxy[2])/2) - 40, int((xyxy[1] + xyxy[3])/2) - 40), cv2.FONT_HERSHEY_PLAIN, 2, [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)

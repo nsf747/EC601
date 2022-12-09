@@ -11,6 +11,10 @@ import math
 
 FILE = Path(__file__).absolute()
 sys.path.append(FILE.parents[0].as_posix())
+ROOT = FILE.parents[0]  # YOLOv5 root directory
+if str(ROOT) not in sys.path:
+    sys.path.append(str(ROOT))  # add ROOT to PATH
+ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
 from models.experimental import attempt_load
 from utils.datasets import LoadStreams, LoadImages
@@ -48,7 +52,7 @@ def run():
     half=False  # use FP16 half-precision inference
     stride = 32
     device_num=''  # cuda device, i.e. 0 or 0,1,2,3 or cpu
-
+    save_dir = ROOT / "runs"
     # Initialize
     set_logging()
     device = select_device(device_num)
