@@ -4,4 +4,5 @@ This project is made to scan for new tweets from SpaceX twitter account and prin
 
 ## Results
 
-![alt text](https://https://github.com/nsf747/EC601/blob/main/Project_2/output.jpg?raw=true)
+![result](https://github.com/nsf747/EC601/blob/main/Project_2/output.jpg?raw=true)
+
