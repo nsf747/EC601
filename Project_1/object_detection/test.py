@@ -200,7 +200,7 @@ def run():
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls)  # integer class
                     label = None if hide_labels else (names[c] if hide_conf else f'{names[c]} {conf:.2f}')
-                    angle=get_orientation(xyxy, imc, file=save_dir / 'crops' / names[c] / "f.jpg", BGR=True)
+                    #angle=get_orientation(xyxy, imc, file=save_dir / 'crops' / names[c] / "f.jpg", BGR=True)
                     plot_one_box(xyxy, img0, label=label, color=colors(c, True), line_thickness=line_thickness)
                     offset_x = int((xyxy[2] - xyxy[0])/50)
                     offset_y = int((xyxy[3] - xyxy[1])/50)
@@ -211,10 +211,14 @@ def run():
                         for j in range(3):
                             x = int(xyxy[0]) + offset_x + interval_x*i1
                             y = int(xyxy[1]) + offset_y + interval_y*j
-                            if x>640:
+                            if x>=640:
                                 x=639
-                            if y>480:
+                            if x<0:
+                                x=0
+                            if y>=480:
                                 y=479
+                            if y<0:
+                                y=0
                             dist = depth_frame.get_distance(x, y)*1000
                             Xtemp = dist*(x - intr.ppx)/intr.fx
                             Ytemp = dist*(y - intr.ppy)/intr.fy
@@ -237,19 +241,19 @@ def run():
                     else:
                         gamma = gamma - 90
                     
-                    text1 = "x : " + str(round(centre_coordinates[0]))
-                    text2 = "y : " + str(round(centre_coordinates[1]))
+                    text1 = "x : " + str(round(centre_coordinates[0])) + "mm"
+                    text2 = "y : " + str(round(centre_coordinates[1])) + "mm"
                     
                     #print(points)
                     
                     Dz = depth_frame.get_distance(int((xyxy[0] + xyxy[2])/2),int((xyxy[1] + xyxy[3])/2))*1000 # get Dz
                     
                     s+= "alpha: " + f"{alpha:.2f}" + ", gamma: " + f"{gamma:.2f}" + "x:y:z=" + f"{centre_coordinates[0]:.2f}" + ":" + f"{centre_coordinates[1]:.2f}" + ":" + f"{centre_coordinates[2]:.2f}" 
-                    text3 = "z : " + str(round(Dz))
+                    text3 = "z : " + str(round(Dz)) + "mm"
                     s+="\n"
-                    cv2.putText(img0, text1, (int((xyxy[0] + xyxy[2])/2) - 40, int((xyxy[1] + xyxy[3])/2)), cv2.FONT_HERSHEY_PLAIN, 2, [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)
-                    cv2.putText(img0, text2, (int((xyxy[0] + xyxy[2])/2) - 40, int((xyxy[1] + xyxy[3])/2) + 40), cv2.FONT_HERSHEY_PLAIN, 2, [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)
-                    cv2.putText(img0, text3, (int((xyxy[0] + xyxy[2])/2) - 40, int((xyxy[1] + xyxy[3])/2) - 40), cv2.FONT_HERSHEY_PLAIN, 2, [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)
+                    cv2.putText(img0, text1, (int((xyxy[0] + xyxy[2])/2) - 40, int((xyxy[1] + xyxy[3])/2) - 40), cv2.FONT_HERSHEY_PLAIN, 2, [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)
+                    cv2.putText(img0, text2, (int((xyxy[0] + xyxy[2])/2) - 40, int((xyxy[1] + xyxy[3])/2) ), cv2.FONT_HERSHEY_PLAIN, 2, [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)
+                    cv2.putText(img0, text3, (int((xyxy[0] + xyxy[2])/2) - 40, int((xyxy[1] + xyxy[3])/2) + 40), cv2.FONT_HERSHEY_PLAIN, 2, [225, 255, 255], thickness=2, lineType=cv2.LINE_AA)
                     #vtx = np.asanyarray(points.get_vertices())
                     #tex = np.asanyarray(points.get_texture_coordinates())
                     #print(type(points), points)

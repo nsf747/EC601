@@ -573,56 +573,63 @@ def profile_idetection(start=0, stop=0, labels=(), save_dir=''):
 
 def get_orientation(xyxy, im, file=Path('im.jpg'), gain=1.02, pad=10, square=False, BGR=False, save=True):
     # Save image crop as {file} with crop size multiple {gain} and {pad} pixels. Save and/or return crop
-    if ((xyxy[2] - xyxy[0])<=(xyxy[3] - xyxy[1])):
-        limit1=135
-        limit2=45
-        len= xyxy[3] - xyxy[1]
-    else:
-        limit1=45
-        limit2=135
-        len= xyxy[3] - xyxy[1]
     
-    xyxy = torch.tensor(xyxy).view(-1, 4)
-    b = xyxy2xywh(xyxy)  # boxes
-    if square:
-        b[:, 2:] = b[:, 2:].max(1)[0].unsqueeze(1)  # attempt rectangle to square
-    b[:, 2:] = b[:, 2:] * gain + pad  # box wh * gain + pad
-    xyxy = xywh2xyxy(b).long()
-    clip_boxes(xyxy, im.shape)
-    img = im[int(xyxy[0, 1]):int(xyxy[0, 3]), int(xyxy[0, 0]):int(xyxy[0, 2]), ::(1 if BGR else -1)]
+    #xyxy = torch.tensor(xyxy).view(-1, 4)
+    #b = xyxy2xywh(xyxy)  # boxes
+    #if square:
+    #    b[:, 2:] = b[:, 2:].max(1)[0].unsqueeze(1)  # attempt rectangle to square
+    #b[:, 2:] = b[:, 2:] * gain + pad  # box wh * gain + pad
+    #xyxy = xywh2xyxy(b).long()
+    #clip_boxes(xyxy, im.shape)
+    #img = im[int(xyxy[0, 1]):int(xyxy[0, 3]), int(xyxy[0, 0]):int(xyxy[0, 2]), ::(1 if BGR else -1)]
     
+    img = im.copy()
     # load image as HSV and select saturation
     hh, ww, cc = img.shape
     angle_deg=0
     # convert to gray
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
    #inverted binary threshold: 1 for the battery, 0 for the background
-    _, thresh = cv2.threshold(gray, 250, 1, cv2.THRESH_BINARY_INV)
+    _, thresh = cv2.threshold(gray, 50, 200, cv2.THRESH_BINARY_INV)
 
-    #From a matrix of pixels to a matrix of coordinates of non-black points.
-    #(note: mind the col/row order, pixels are accessed as [row, col]
-    #but when we draw, it's (x, y), so have to swap here or there)
-    mat = np.argwhere(thresh != 0)
+    contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    for i, c in enumerate(contours):
+ 
+        # Calculate the area of each contour
+        area = cv2.contourArea(c)
 
-    #let's swap here... (e. g. [[row, col], ...] to [[col, row], ...])
-    mat[:, [0, 1]] = mat[:, [1, 0]]
-    #or we could've swapped at the end, when drawing
-    #(e. g. center[0], center[1] = center[1], center[0], same for endpoint1 and endpoint2),
-    #probably better performance-wise
+        # Ignore contours that are too small or too large
+        if area < 3700 or 100000 < area:
+            continue
 
+        # cv.minAreaRect returns:
+        # (center(x, y), (width, height), angle of rotation) = cv2.minAreaRect(c)
+        rect = cv2.minAreaRect(c)
+        box = cv2.boxPoints(rect)
+        box = np.int0(box)
 
-    mat = np.array(mat).astype(np.float32) #have to convert type for PCA
+        # Retrieve the key parameters of the rotated bounding box
+        center = (int(rect[0][0]),int(rect[0][1])) 
+        width = int(rect[1][0])
+        height = int(rect[1][1])
+        angle = int(rect[2])
 
-    #mean (e. g. the geometrical center) 
-    #and eigenvectors (e. g. directions of principal components)
-    m, e = cv2.PCACompute(mat, mean = np.array([]))
+            
+        if width < height:
+            angle = 90 - angle
+        else:
+            angle = -angle
+        
+        label = "  Rotation Angle: " + str(angle) + " degrees"
+        textbox = cv2.rectangle(img, (center[0]-35, center[1]-25), 
+        (center[0] + 295, center[1] + 10), (255,255,255), -1)
+        cv2.putText(img, label, (center[0]-50, center[1]), 
+        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,0), 1, cv2.LINE_AA)
+        cv2.drawContours(img,[box],0,(0,0,255),2)
+    
+    cv2.drawContours(img,contours, -1, (0,255,0), 3)
 
-    #now to draw: let's scale our primary axis by 100, 
-    #and the secondary by 50
-
-    center = tuple(m[0])
-    endpoint1 = tuple(m[0] + e[0]*100)
-    endpoint2 = tuple(m[0] + e[1]*50)
+    cv2.imshow("contours", img)
 
     return 0
 ################################################
@@ -688,6 +695,7 @@ def get_orientation(xyxy, im, file=Path('im.jpg'), gain=1.02, pad=10, square=Fal
 
 
     return angle_deg
+
 
 def save_one_box(xyxy, im, file=Path('im.jpg'), gain=1.02, pad=10, square=False, BGR=False, save=True):
     # Save image crop as {file} with crop size multiple {gain} and {pad} pixels. Save and/or return crop

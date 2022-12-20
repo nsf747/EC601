@@ -5,40 +5,28 @@ import configparser
 import pandas as pd 
 
 #read configs
-config = configparser.ConfigParser()
-config.read('config.ini')
+#config = configparser.ConfigParser()
+#config.read('config.ini')
 
-api_key = config['tweeter']['api_key']
-api_key_secret = config['tweeter']['api_key_secret']
-access_token = config['tweeter']['access_token']
-access_token_secret = config['tweeter']['access_token_secret']
+#api_key = config['tweeter']['api_key']
+#api_key_secret = config['tweeter']['api_key_secret']
+#access_token = config['tweeter']['access_token']
+#access_token_secret = config['tweeter']['access_token_secret']
 
+api_key = 'BrtedvLydbXZWQxaLjNK3hxEe'
+api_key_secret = 'cDI1APaFrIAsJ4jFDD4YQUA6VCojzkaKZDLLwtrnhNcQztRPPm'
+bearer_token = 'AAAAAAAAAAAAAAAAAAAAAI6aiQEAAAAALj2dFRoHhFumZjbxTYjJdWzr34Y%3DnBkF3S2rg644mjlNYMOAgSxHlxrjd4jfr5mszMXTGSeLYt4ez2'
+access_token = '1247052156248756224-a35VQOmCztKTkStuap7tAVeNliz0Aq'
+access_token_secret = 'U9tDATQr2wZ95WLtZRSq6D0PdzKN1z91PyCHPqMe5j1a5'
 # authentication 
-auth = tweepy.OAuthHandler(api_key, api_key_secret)
-auth.set_access_token(access_token, access_token_secret)
-api =tweepy.API(auth)
-public_tweets = api.home_timeline()
+api = tweepy.Client(bearer_token=bearer_token, consumer_key= api_key,consumer_secret= api_key_secret,access_token= access_token,access_token_secret= access_token_secret)
 
-###Writes last 20 twits in file 
-for tweet in public_tweets:
-  print(tweet.text)
-print(public_tweets[0].user.screen_name)
-columns = ['Time', 'User', 'Tweet']
-data = []
-for tweet in public_tweets:
-    data.append([tweet.created_at, tweet.user.screen_name, tweet.text])
-df = pd.DataFrame(data, columns=columns)
-df.to_csv('tweets.csv')
+user = 'Falcon 9\'s launch from:SpaceX'
+max_limit = 10
+tweets = api.search_recent_tweets( query=user ,tweet_fields=['context_annotations', 'created_at'],max_results = max_limit,user_auth=False)
 
-
-###Getting some tweets of a user
-user = 'SpaceX'
-limit = 30
-
-tweets = api.user_timeline(screen_name = user, count = limit, tweet_mode = 'extended')
-for tweet in tweets:
-    print(tweet.full_text)
-    
-
-
+for tweet in tweets.data:
+    print(tweet.text)
+    print('\n')
+    #print(tweet.created_at)
 
